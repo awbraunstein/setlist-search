@@ -12,6 +12,22 @@ import (
 	"github.com/pkg/errors"
 )
 
+// The indexer will write an index file in the following format:
+//
+//  "setsearcher index 1\n"
+//  list of shows/dates
+//  list of songs
+//  setlists
+//
+// Each section will be separated by the empty byte ("\x00").
+//
+// List of shows dates will be a csv style collection of show id's and dates.
+// id,date\nid,date\n...
+//
+// List of songs will be a newline separated list of songs across all setlists.
+//
+// Setlists will be a list of setlists where each setlist is formatted according
+// to the setlist serialization method separated by newlines.
 var usageMessage = `usage: indexer [-reset]
 
 indexer prepares the index used by the setlist-search app. The index is the file
