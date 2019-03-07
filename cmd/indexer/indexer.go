@@ -5,10 +5,15 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
+	"path/filepath"
+	"strconv"
 	"time"
 
+	"github.com/awbraunstein/setlist-search/index"
+	"github.com/awbraunstein/setlist-search/searcher"
 	"github.com/pkg/errors"
 )
 
@@ -45,7 +50,10 @@ The -reset flag will re-fetch all shows and rebuild the index from scratch.
 const (
 	firstShowDate = "1983-10-30"
 	queryShowsUrl = "https://api.phish.net/v3/shows/query"
-	dateFormat    = "2006-01-02"
+	getSetlistUrl = "https://api.phish.net/v3/setlists/get"
+
+	dateFormat = "2006-01-02"
+	queryRate  = time.Minute / 120
 )
 
 func usage() {
@@ -54,29 +62,47 @@ func usage() {
 }
 
 var (
-	resetFlag   = flag.Bool("reset", false, "discard existing index")
+	apiKey = os.Getenv("PHISHAPIKEY")
+)
+
+var (
 	verboseFlag = flag.Bool("verbose", false, "print extra information")
 )
 
 type showData struct {
-	showDate string
-	showId   int
+	date string
+	id   string
 }
 
-func queryShowsGteDate(apiKey string, lastShowDate string, showsFound map[int]showData) error {
+type httpResult struct {
+	resp *http.Response
+	err  error
+}
+
+var (
+	throttle = time.Tick(queryRate)
+	//httpResults  = make(chan httpResult)
+	//httpRequests = make(chan *http.Request)
+)
+
+func sendPhishNetQuery(url string) (*http.Response, error) {
+	log.Printf("Querying: %s\n", url)
+	req, err := http.NewRequest("POST", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	<-throttle
+	return http.DefaultClient.Do(req)
+}
+
+func queryShowsGteDate(lastShowDate string, showsFound map[string]showData) error {
 	url := queryShowsUrl + "?apikey=" + apiKey
 	url += "&order=ASC"
 	url += "&showdate_gte=" + lastShowDate
-	fmt.Printf("Querying: %s\n", url)
-	req, err := http.NewRequest("POST", url, nil)
+	res, err := sendPhishNetQuery(url)
 	if err != nil {
 		return err
 	}
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return err
-	}
-
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
@@ -97,7 +123,7 @@ func queryShowsGteDate(apiKey string, lastShowDate string, showsFound map[int]sh
 
 	response := respJson["response"].(map[string]interface{})
 	count := int(response["count"].(float64))
-	fmt.Printf("Querried %d shows.\n", count)
+	log.Printf("Querried %d shows.\n", count)
 	if count == 0 {
 		return nil
 	}
@@ -119,44 +145,104 @@ func queryShowsGteDate(apiKey string, lastShowDate string, showsFound map[int]sh
 		if int(show["artistid"].(float64)) != 1 {
 			continue
 		}
-		showId := int(show["showid"].(float64))
-		fmt.Printf("Found show: %d, %s\n", showId, showDate)
+		showId := strconv.FormatInt(int64(show["showid"].(float64)), 10)
+		log.Printf("Found show: %s, %s\n", showId, showDate)
 		showsFound[showId] = showData{
-			showDate: showDate,
-			showId:   showId,
+			date: showDate,
+			id:   showId,
 		}
 	}
 
 	if lastShowFoundStr := lastShowFound.Format(dateFormat); lastShowFoundStr != lastShowDate {
-		return queryShowsGteDate(apiKey, lastShowFoundStr, showsFound)
+		return queryShowsGteDate(lastShowFoundStr, showsFound)
 	}
 	return nil
 }
 
-func queryAllShows(apiKey string) (map[int]showData, error) {
-	shows := make(map[int]showData)
-	if err := queryShowsGteDate(apiKey, firstShowDate, shows); err != nil {
+func queryAllShows() (map[string]showData, error) {
+	shows := make(map[string]showData)
+	if err := queryShowsGteDate(firstShowDate, shows); err != nil {
 		return nil, err
 	}
 	return shows, nil
+}
+
+func getSetlist(showId string) (*searcher.Setlist, error) {
+	url := fmt.Sprintf("%s?apikey=%s&showid=%s", getSetlistUrl, apiKey, showId)
+	res, err := sendPhishNetQuery(url)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+	var respJson map[string]interface{}
+	if err := json.Unmarshal(body, &respJson); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	errorCode, ok := respJson["error_code"].(float64)
+	if !ok {
+		return nil, errors.New("Unable to find error code")
+	}
+	if errorCode != 0 {
+		return nil, fmt.Errorf("Request error: %d; %s", errorCode, respJson["error_message"].(string))
+	}
+
+	response := respJson["response"].(map[string]interface{})
+	count := int(response["count"].(float64))
+	if count == 0 {
+		// If we got 0 setlists, it means that there isn't a setlist for the given show.
+		return nil, nil
+	}
+	if count > 1 {
+		return nil, fmt.Errorf("received multiple entries for showid=%s. Using the first one.", showId)
+	}
+	setlistData := response["data"].([]interface{})[0].(map[string]interface{})["setlistdata"].(string)
+	return searcher.ParseSetlistFromPhishNet(showId, setlistData)
+}
+
+func getIndexLocation() string {
+	if indexLocation := os.Getenv("SETSEARCHERINDEX"); indexLocation != "" {
+		return indexLocation
+	}
+	return filepath.Clean(os.Getenv("HOME") + "/.setsearcherindex")
 }
 
 func main() {
 	flag.Usage = usage
 	flag.Parse()
 
-	apiKey := os.Getenv("PHISHAPIKEY")
 	if apiKey == "" {
-		fmt.Fprintf(os.Stderr, "Could not find api key $PHISHAPIKEY")
+		fmt.Fprintln(os.Stderr, "Could not find api key $PHISHAPIKEY")
 		usage()
 	}
 
-	if *resetFlag {
-		shows, err := queryAllShows(apiKey)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "error querying all shows: %v\n", err)
-			os.Exit(2)
-		}
-		fmt.Printf("Found %d shows.\n", len(shows))
+	indexLocation := getIndexLocation()
+	w := index.NewWriter(indexLocation)
+
+	shows, err := queryAllShows()
+	if err != nil {
+		log.Fatalf("error querying all shows: %v\n", err)
 	}
+	for _, show := range shows {
+		w.AddShow(show.id, show.date)
+	}
+	for _, show := range shows {
+		sl, err := getSetlist(show.id)
+		if err != nil {
+			log.Fatalf("unable to fetch setlist for show %s - %s; %v", show.id, show.date, err)
+		}
+		if sl == nil {
+			log.Printf("No known setlist for show %s - %s\n", show.id, show.date)
+			continue
+		}
+		w.AddSetlist(sl)
+	}
+	if err := w.Write(); err != nil {
+		log.Fatalf("error writing file: %v\n", err)
+	}
+	log.Printf("wrote index to %s", indexLocation)
 }
