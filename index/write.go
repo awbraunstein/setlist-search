@@ -1,7 +1,6 @@
 package index
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"sort"
@@ -13,10 +12,6 @@ import (
 type IndexWriter struct {
 	// indexLocation is the location that the index will be written to.
 	indexLocation string
-	// shows is a map from showId to show date.
-	shows map[string]string
-	// songs is the set of songs played in the set of shows with setlists.
-	songs map[string]bool
 	// setlists is a map from showid to setlist info.
 	setlists map[string]*searcher.Setlist
 
@@ -27,28 +22,12 @@ type IndexWriter struct {
 func NewWriter(indexLocation string) *IndexWriter {
 	return &IndexWriter{
 		indexLocation: indexLocation,
-		shows:         make(map[string]string),
-		songs:         make(map[string]bool),
 		setlists:      make(map[string]*searcher.Setlist),
 	}
 }
 
-func (w *IndexWriter) AddShow(id string, date string) {
-	w.shows[id] = date
-}
-
 func (w *IndexWriter) AddSetlist(sl *searcher.Setlist) {
 	w.setlists[sl.ShowId] = sl
-	for _, set := range sl.Sets {
-		for _, song := range set.Songs {
-			w.songs[song] = true
-		}
-	}
-	if sl.Encore != nil {
-		for _, song := range sl.Encore.Songs {
-			w.songs[song] = true
-		}
-	}
 }
 
 func (w *IndexWriter) writeNull() error {
@@ -62,39 +41,19 @@ func (w *IndexWriter) Write() error {
 	if err != nil {
 		return err
 	}
-	if _, err := w.file.WriteString("setsearcher index 1\n"); err != nil {
+	if _, err := w.file.WriteString(header); err != nil {
 		return err
 	}
-	if err := w.writeNull(); err != nil {
+	if _, err := w.file.WriteString("\n"); err != nil {
 		return err
 	}
 
 	var showIds []string
-	for key := range w.shows {
+	for key := range w.setlists {
 		showIds = append(showIds, key)
 	}
 
 	sort.Strings(showIds)
-	for _, id := range showIds {
-		if _, err := fmt.Fprintf(w.file, "%s,%s\n", id, w.shows[id]); err != nil {
-			return err
-		}
-	}
-	if err := w.writeNull(); err != nil {
-		return err
-	}
-
-	var songs []string
-	for song := range w.songs {
-		songs = append(songs, song)
-	}
-	sort.Strings(songs)
-	if _, err := w.file.WriteString(strings.Join(songs, "\n")); err != nil {
-		return err
-	}
-	if err := w.writeNull(); err != nil {
-		return err
-	}
 	var setlists []string
 	for _, id := range showIds {
 		set, ok := w.setlists[id]
@@ -107,4 +66,12 @@ func (w *IndexWriter) Write() error {
 	}
 	w.file.Close()
 	return os.Rename(w.file.Name(), w.indexLocation)
+}
+
+func (i *Index) Write(indexLocation string) error {
+	iw := NewWriter(indexLocation)
+	for _, setlist := range i.setlists {
+		iw.AddSetlist(setlist)
+	}
+	return iw.Write()
 }

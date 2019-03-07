@@ -123,6 +123,21 @@ func ParseSetlistFromPhishNet(showId string, setlist string) (*Setlist, error) {
 	return sl, nil
 }
 
+func (s *Setlist) Songs() []string {
+	var songs []string
+	for _, set := range s.Sets {
+		for _, song := range set.Songs {
+			songs = append(songs, song)
+		}
+	}
+	if s.Encore != nil {
+		for _, song := range s.Encore.Songs {
+			songs = append(songs, song)
+		}
+	}
+	return songs
+}
+
 func (s *Setlist) String() string {
 	str := fmt.Sprintf("ID{%s}", s.ShowId)
 	for i, set := range s.Sets {
