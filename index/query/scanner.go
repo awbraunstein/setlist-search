@@ -19,7 +19,7 @@ const (
 	IDENT
 
 	// Special characters
-	COLON       // :
+	// COLON       // :
 	LEFT_PAREN  // (
 	RIGHT_PAREN // )
 
@@ -27,7 +27,16 @@ const (
 
 	AND // AND
 	OR  // OR
+	NOT // NOT
 )
+
+func (t Token) isOperator() bool {
+	return t == AND || t == OR
+}
+
+func (t Token) isFunction() bool {
+	return t == NOT
+}
 
 func isWhitespace(ch rune) bool {
 	return ch == ' ' || ch == '\t' || ch == '\n'
@@ -39,6 +48,10 @@ func isLetter(ch rune) bool {
 
 func isDigit(ch rune) bool {
 	return (ch >= '0' && ch <= '9')
+}
+
+func isAllowedCh(ch rune) bool {
+	return ch == '-' || ch == '_'
 }
 
 var eof = rune(0)
@@ -89,8 +102,6 @@ func (s *Scanner) Scan() (tok Token, lit string) {
 		return RIGHT_PAREN, string(ch)
 	case '(':
 		return LEFT_PAREN, string(ch)
-	case ':':
-		return COLON, string(ch)
 	}
 
 	return ILLEGAL, string(ch)
@@ -129,7 +140,7 @@ func (s *Scanner) scanIdent() (tok Token, lit string) {
 	for {
 		if ch := s.read(); ch == eof {
 			break
-		} else if !isLetter(ch) && !isDigit(ch) && ch != '_' {
+		} else if !isLetter(ch) && !isDigit(ch) && !isAllowedCh(ch) {
 			s.unread()
 			break
 		} else {
@@ -143,6 +154,8 @@ func (s *Scanner) scanIdent() (tok Token, lit string) {
 		return AND, buf.String()
 	case "OR":
 		return OR, buf.String()
+	case "NOT":
+		return NOT, buf.String()
 	}
 
 	// Otherwise return as a regular identifier.
