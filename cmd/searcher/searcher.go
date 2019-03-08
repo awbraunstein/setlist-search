@@ -62,7 +62,7 @@ func main() {
 		}
 		sort.Strings(dates)
 
-		fmt.Printf("Matched shows:\n%v\n", strings.Join(dates, ", "))
+		fmt.Printf("Matched shows %d:\n%v\n", len(dates), strings.Join(dates, ", "))
 		fmt.Print("> ")
 	}
 	fmt.Println("Goodbye")
