@@ -7,6 +7,14 @@ import (
 	"github.com/awbraunstein/setlist-search/index/query"
 )
 
+func (i *Index) ShowDate(id string) string {
+	sl := i.setlists[id]
+	if sl != nil {
+		return sl.Date
+	}
+	return ""
+}
+
 func (i *Index) Query(q string) ([]string, error) {
 	p := query.NewParser(strings.NewReader(q))
 	stmt, err := p.Parse()

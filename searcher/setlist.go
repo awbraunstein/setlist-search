@@ -12,6 +12,7 @@ import (
 // Setlist holds the set from a show.
 type Setlist struct {
 	ShowId string
+	Date   string
 	Sets   []*Set
 	Encore *Set
 }
@@ -23,8 +24,9 @@ type Set struct {
 
 var (
 	idRe     = regexp.MustCompile(`^ID\{(.+?)\}`)
-	setRe    = regexp.MustCompile(`(?:SET\d+\{(.+?)\})`)
-	encoreRe = regexp.MustCompile(`(?:ENCORE\{(.+?)\})`)
+	dateRe   = regexp.MustCompile(`DATE\{(.+?)\}`)
+	setRe    = regexp.MustCompile(`(?:SET\d+\{(.*?)\})`)
+	encoreRe = regexp.MustCompile(`(?:ENCORE\{(.*?)\})`)
 )
 
 // ParseSetlist parses setlists that are of the form:
@@ -34,8 +36,13 @@ func ParseSetlist(setlist string) (*Setlist, error) {
 	if len(idMatches) != 2 {
 		return nil, fmt.Errorf("ParseSetlist: couldn't find ID tag at start of setlist: %s", setlist)
 	}
+	dateMatches := dateRe.FindStringSubmatch(setlist)
+	if len(dateMatches) != 2 {
+		return nil, fmt.Errorf("ParseSetlist: couldn't find DATE tag in setlist: %s", setlist)
+	}
 	sl := &Setlist{
 		ShowId: idMatches[1],
+		Date:   dateMatches[1],
 	}
 	setMatches := setRe.FindAllStringSubmatch(setlist, -1)
 	if len(setMatches) == 0 {
@@ -54,9 +61,10 @@ func ParseSetlist(setlist string) (*Setlist, error) {
 	return sl, nil
 }
 
-func ParseSetlistFromPhishNet(showId string, setlist string) (*Setlist, error) {
+func ParseSetlistFromPhishNet(showId, date, setlist string) (*Setlist, error) {
 	sl := &Setlist{
 		ShowId: showId,
+		Date:   date,
 	}
 	root, err := html.Parse(strings.NewReader(setlist))
 	if err != nil {
@@ -139,7 +147,7 @@ func (s *Setlist) Songs() []string {
 }
 
 func (s *Setlist) String() string {
-	str := fmt.Sprintf("ID{%s}", s.ShowId)
+	str := fmt.Sprintf("ID{%s}DATE{%s}", s.ShowId, s.Date)
 	for i, set := range s.Sets {
 		str += fmt.Sprintf("SET%d{%s}", i+1, strings.Join(set.Songs, ","))
 	}

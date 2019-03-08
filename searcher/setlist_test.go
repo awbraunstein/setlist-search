@@ -14,9 +14,10 @@ func TestParseSetlist(t *testing.T) {
 	}{
 		{
 			name:    "valid setlist",
-			setlist: "ID{1}SET1{a,b,c,d}SET2{x,y,z}ENCORE{aa,bb}",
+			setlist: "ID{1}DATE{2000-07-20}SET1{a,b,c,d}SET2{x,y,z}ENCORE{aa,bb}",
 			expected: &Setlist{
 				ShowId: "1",
+				Date:   "2000-07-20",
 				Sets: []*Set{
 					&Set{Songs: []string{"a", "b", "c", "d"}},
 					&Set{Songs: []string{"x", "y", "z"}},
@@ -28,6 +29,12 @@ func TestParseSetlist(t *testing.T) {
 		{
 			name:     "missing ID",
 			setlist:  "SET1{a,b,c,d}SET2{x,y,z}ENCORE{aa,bb}",
+			expected: nil,
+			err:      true,
+		},
+		{
+			name:     "missing DATE",
+			setlist:  "ID{1}SET1{a,b,c,d}SET2{x,y,z}ENCORE{aa,bb}",
 			expected: nil,
 			err:      true,
 		},
@@ -59,7 +66,7 @@ func TestParseSetlist(t *testing.T) {
 }
 
 func TestSetlistString(t *testing.T) {
-	setlistString := "ID{1}SET1{a,b,c,d}SET2{x,y,z}ENCORE{aa,bb}"
+	setlistString := "ID{1}DATE{2000-04-21}SET1{a,b,c,d}SET2{x,y,z}ENCORE{aa,bb}"
 	setlistStruct, err := ParseSetlist(setlistString)
 	if err != nil {
 		t.Fatalf("Unable to parse setlist; %v", err)
@@ -74,6 +81,7 @@ func TestParseSetlistFromPhishNet(t *testing.T) {
 
 	want := &Setlist{
 		ShowId: "1",
+		Date:   "2000-04-20",
 		Sets: []*Set{
 			&Set{Songs: []string{"nicu", "golgi-apparatus", "crossroads", "cars-trucks-buses", "train-song", "theme-from-the-bottom", "fluffhead", "dirt", "run-like-an-antelope"}},
 			&Set{Songs: []string{"down-with-disease", "david-bowie", "possum", "tube", "you-enjoy-myself"}},
@@ -81,7 +89,7 @@ func TestParseSetlistFromPhishNet(t *testing.T) {
 		Encore: &Set{Songs: []string{"good-times-bad-times"}},
 	}
 
-	got, err := ParseSetlistFromPhishNet("1", setlistData)
+	got, err := ParseSetlistFromPhishNet("1", "2000-04-20", setlistData)
 	if err != nil {
 		t.Fatalf("Unable to parse setlist; %v", err)
 	}

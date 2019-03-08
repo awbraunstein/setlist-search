@@ -17,7 +17,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-var usageMessage = `usage: indexer [-reset]
+var usageMessage = `usage: indexer
 
 indexer prepares the index used by the setlist-search app. The index is the file
 named by $SETSEARCHERINDEX, or else $HOME/.setsearcherindex.
@@ -26,10 +26,7 @@ named by $SETSEARCHERINDEX, or else $HOME/.setsearcherindex.
 The indexer uses the phish.net api to scrape all of the new shows. If [-reset]
 is false, then only new shows will be fetched.
 
-The apikey for requests will be read from $PHISHAPIKEY.
-
-The -reset flag will re-fetch all shows and rebuild the index from scratch.
-`
+The apikey for requests will be read from $PHISHAPIKEY.`
 
 const (
 	firstShowDate = "1983-10-30"
@@ -47,10 +44,6 @@ func usage() {
 
 var (
 	apiKey = os.Getenv("PHISHAPIKEY")
-)
-
-var (
-	verboseFlag = flag.Bool("verbose", false, "print extra information")
 )
 
 type showData struct {
@@ -102,7 +95,7 @@ func queryShowsGteDate(lastShowDate string, showsFound map[string]showData) erro
 		return errors.New("Unable to find error code")
 	}
 	if errorCode != 0 {
-		return fmt.Errorf("Request error: %d; %s", errorCode, respJson["error_message"].(string))
+		return fmt.Errorf("Request error: %d; %s", int(errorCode), respJson["error_message"].(string))
 	}
 
 	response := respJson["response"].(map[string]interface{})
@@ -151,7 +144,7 @@ func queryAllShows() (map[string]showData, error) {
 	return shows, nil
 }
 
-func getSetlist(showId string) (*searcher.Setlist, error) {
+func getSetlist(showId, date string) (*searcher.Setlist, error) {
 	url := fmt.Sprintf("%s?apikey=%s&showid=%s", getSetlistUrl, apiKey, showId)
 	res, err := sendPhishNetQuery(url)
 	if err != nil {
@@ -172,7 +165,7 @@ func getSetlist(showId string) (*searcher.Setlist, error) {
 		return nil, errors.New("Unable to find error code")
 	}
 	if errorCode != 0 {
-		return nil, fmt.Errorf("Request error: %d; %s", errorCode, respJson["error_message"].(string))
+		return nil, fmt.Errorf("Request error: %d; %s", int(errorCode), respJson["error_message"].(string))
 	}
 
 	response := respJson["response"].(map[string]interface{})
@@ -185,7 +178,7 @@ func getSetlist(showId string) (*searcher.Setlist, error) {
 		return nil, fmt.Errorf("received multiple entries for showid=%s. Using the first one.", showId)
 	}
 	setlistData := response["data"].([]interface{})[0].(map[string]interface{})["setlistdata"].(string)
-	return searcher.ParseSetlistFromPhishNet(showId, setlistData)
+	return searcher.ParseSetlistFromPhishNet(showId, date, setlistData)
 }
 
 func getIndexLocation() string {
@@ -212,7 +205,7 @@ func main() {
 		log.Fatalf("error querying all shows: %v\n", err)
 	}
 	for _, show := range shows {
-		sl, err := getSetlist(show.id)
+		sl, err := getSetlist(show.id, show.date)
 		if err != nil {
 			log.Fatalf("unable to fetch setlist for show %s - %s; %v", show.id, show.date, err)
 		}
