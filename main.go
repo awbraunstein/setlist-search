@@ -2,29 +2,21 @@ package main
 
 import (
 	"flag"
-	"log"
-	"net/http"
+	"io"
 	"os"
 	"path/filepath"
-	"sort"
-	"time"
+	"text/template"
 
 	echotrace "github.com/awbraunstein/echo-trace"
-	"github.com/awbraunstein/setlist-search/index"
+	"github.com/awbraunstein/setlist-search/handlers"
+	"github.com/awbraunstein/setlist-search/internal"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
-	"golang.org/x/net/trace"
 )
 
 var (
 	httpAddr = flag.String("http", ":8080", "Listen address")
 )
-
-type server struct {
-	*echo.Echo
-
-	indx *index.Index
-}
 
 func getIndexLocation() string {
 	if indexLocation := os.Getenv("SETSEARCHERINDEX"); indexLocation != "" {
@@ -33,64 +25,39 @@ func getIndexLocation() string {
 	return filepath.Clean(os.Getenv("HOME") + "/.setsearcherindex")
 }
 
-func newServer() (*server, error) {
-	indx, err := index.Open(getIndexLocation())
-	if err != nil {
-		return nil, err
-	}
-
-	return &server{
-		Echo: echo.New(),
-		indx: indx,
-	}, nil
+type Template struct {
+	templates *template.Template
 }
 
-// SearchResult is the json payload for a search query.
-type SearchResult struct {
-	Count int      `json:"count"`
-	Dates []string `json:"dates"`
+func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
+	return t.templates.ExecuteTemplate(w, name, data)
 }
 
 // This is the entrypoint into the setlist server.
 func main() {
-
 	flag.Parse()
-	e, err := newServer()
-	if err != nil {
-		log.Fatalf("Unable to create server: %v", err)
+	e := echo.New()
+	t := &Template{
+		templates: template.Must(template.ParseGlob("templates/*.tmpl")),
 	}
+	e.Renderer = t
+
 	e.Use(middleware.Recover())
 	e.Use(middleware.Logger())
 	e.Use(middleware.Gzip())
 	e.Use(echotrace.Middleware)
+	injector, err := internal.NewInjector(getIndexLocation())
+	if err != nil {
+		e.Logger.Fatal(err)
+	}
+	e.Use(injector.Middleware)
 
-	e.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Hello, World!")
-	})
+	e.GET("/", handlers.Home)
+	e.GET("/search", handlers.Search)
 
-	e.GET("/api/search", func(c echo.Context) error {
-		query := c.QueryParam("query")
-		if query == "" {
-			return echo.NewHTTPError(http.StatusBadRequest, "Missing query param")
-		}
-		start := time.Now()
-		shows, err := e.indx.Query(query)
-		if err != nil {
-			tr := c.Get(echotrace.ContextKey).(trace.Trace)
-			tr.LazyPrintf("Error executing query: %v", err)
-			return echo.NewHTTPError(http.StatusInternalServerError, "Internal Error")
-		}
-		elapsed := time.Since(start)
-		tr := c.Get(echotrace.ContextKey).(trace.Trace)
-		tr.LazyPrintf("Query %q completed in %v", query, elapsed)
-		sr := &SearchResult{}
-		sr.Count = len(shows)
-		for _, show := range shows {
-			sr.Dates = append(sr.Dates, e.indx.ShowDate(show))
-		}
-		sort.Strings(sr.Dates)
-		return c.JSON(http.StatusOK, sr)
-	})
+	// Accept /api/search on GET and POST.
+	e.GET("/api/search", handlers.SearchAPI)
+	e.POST("/api/search", handlers.SearchAPI)
 
 	e.GET("/debug/requests", echotrace.Handler)
 

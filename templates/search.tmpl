@@ -1,0 +1,38 @@
+{{define "error"}}
+<div class="error">
+    <span class="error-msg">Unable to process query. Please try again.</span>
+</div>
+{{end}}
+
+{{define "results"}}
+<div class="results">
+    <div class="results-header">
+	Found {{.Count}} results ({{.QueryTime}})
+    </div>
+    <div class="results-body">
+	{{range .Dates}}
+	    <div class="show">
+		{{.}}
+	    </div>
+	{{end}}
+    </div>
+</div>
+{{end}}
+
+<!doctype html>
+<html>
+    <head>
+	<title>Search Results</title>
+    </head>
+    <body>
+	<div>
+	    <h1>Search Phish Setlists:</h1>
+	    {{template "searchbox" .Query}}
+	</div>
+	{{if .Results}}
+	    {{template "results" .Results}}
+	{{else}}
+	    {{template "error" .}}
+	{{end}}
+    </body>
+</html>

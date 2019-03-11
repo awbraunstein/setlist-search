@@ -1,0 +1,8 @@
+{{define "sample_queries"}}
+<div class="sample-queries">
+    <h2>Sample Queries</h2>
+    {{range .}}
+	<div class="query"><a href="/search?query={{.}}">{{.}}</a></div>
+    {{end}}
+</div>
+{{end}}
