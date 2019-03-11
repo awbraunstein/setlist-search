@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"reflect"
 
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 )
 
 // MergeJSONBody takes request params and injects them into the json body type.

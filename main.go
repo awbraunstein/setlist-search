@@ -10,8 +10,8 @@ import (
 	echotrace "github.com/awbraunstein/echo-trace"
 	"github.com/awbraunstein/setlist-search/handlers"
 	"github.com/awbraunstein/setlist-search/internal"
-	"github.com/labstack/echo"
-	"github.com/labstack/echo/middleware"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 var (

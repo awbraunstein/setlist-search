@@ -2,7 +2,7 @@ package internal
 
 import (
 	"github.com/awbraunstein/setlist-search/index"
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 )
 
 const (
