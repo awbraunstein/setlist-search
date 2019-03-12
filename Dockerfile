@@ -1,32 +1,28 @@
 # Dockerfile References: https://docs.docker.com/engine/reference/builder/
 
-# Start from golang v1.12 base image
-FROM golang:1.12
+FROM golang:1.12 as builder
 
-# Enable Go Modules.
 ENV GO111MODULE=on
+WORKDIR /go/src/github.com/awbraunstein/setlist-search
 
-# Add Maintainer Info
-LABEL maintainer="Andrew Braunstein <awbraunstein@gmail.com>"
-
-ENV DIRPATH=$GOPATH/src/github.com/awbraunstein/setlist-search
-
-# Set the Current Working Directory inside the container
-WORKDIR $DIRPATH
-
-# Copy everything from the current directory to the PWD(Present Working Directory) inside the container
 COPY . .
 
-ENV SETSEARCHERINDEX=$DIRPATH/.setsearcherindex
-
-# Download all the dependencies
 RUN go get -d -v ./...
+RUN CGO_ENABLED=0 GOOS=linux go build -a -o app .
 
-# Install the package
-RUN go install -v ./...
+FROM alpine
 
-# This container exposes port 8080 to the outside world
+RUN apk --no-cache add ca-certificates
+
+LABEL maintainer="Andrew Braunstein <awbraunstein@gmail.com>"
+
+WORKDIR /root/
+COPY --from=builder /go/src/github.com/awbraunstein/setlist-search/app .
+COPY --from=builder /go/src/github.com/awbraunstein/setlist-search/templates templates/
+COPY --from=builder /go/src/github.com/awbraunstein/setlist-search/.setsearcherindex .
+ENV SETSEARCHERINDEX=/root/.setsearcherindex
+
+
 EXPOSE 8080
 
-# Run the executable
-CMD ["setlist-search", "-http=:8080"]
+CMD ["./app", "-http=:8080"]

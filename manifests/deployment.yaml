@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: setlist-search-deployment
+  labels:
+    app: setlist-search
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: setlist-search
+      tier: web
+  template:
+    metadata:
+      labels:
+        app: setlist-search
+        tier: web
+    spec:
+      containers:
+      - name: setlist-search
+        image: gcr.io/setlist-searcher/setlist-search:latest
+        ports:
+        - containerPort: 8080
