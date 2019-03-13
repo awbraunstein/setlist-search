@@ -18,6 +18,20 @@ spec:
     spec:
       containers:
       - name: setlist-search
-        image: gcr.io/setlist-searcher/setlist-search:latest
+        image: gcr.io/setlist-searcher/setlist-search
         ports:
         - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: setlist-search
+  labels:
+    app: setlist-search
+spec:
+  selector:
+    app: setlist-search
+    tier: web
+  ports:
+  - port: 8080
+    targetPort: 8080

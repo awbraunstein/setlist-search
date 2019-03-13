@@ -60,6 +60,5 @@ func main() {
 	e.POST("/api/search", handlers.SearchAPI)
 
 	e.GET("/debug/requests", echotrace.Handler)
-
 	e.Logger.Fatal(e.Start(*httpAddr))
 }
