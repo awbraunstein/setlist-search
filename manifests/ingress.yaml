@@ -4,6 +4,7 @@ metadata:
   name: searchphish
   annotations:
     kubernetes.io/ingress.class: traefik
+    traefik.frontend.entryPoints: http,https
 spec:
   rules:
   - http:

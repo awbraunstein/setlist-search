@@ -96,12 +96,14 @@ data:
       [metrics.prometheus]
     [entryPoints]
       [entryPoints.http]
-        address = ":80"
+      address = ":80"
+        [entryPoints.http.redirect]
+        entryPoint = "https"
       [entryPoints.https]
-        address = ":443"
+      address = ":443"
         [entryPoints.https.tls]
       [entryPoints.internal]
-        address = ":8888"
+      address = ":8888"
     [acme]
       acmeLogging = true
       email = "awbraunstein@gmail.com"
@@ -111,6 +113,8 @@ data:
       OnDemand = false
       [acme.httpChallenge]
         entryPoint = "http"
+    [[acme.domains]]
+      main = "searchphish.com"
 ---
 apiVersion: v1
 kind: Service

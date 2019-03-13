@@ -45,3 +45,6 @@ Setup the setlist search backend.
 Setup the ingress rule.
 
 `kubectl apply -f manifests/ingress.yaml`
+
+Open ports 80 and 443 on your nodes, make your external IPs static, and add your
+external IPs as A record entries in your DNS Nameserver.
