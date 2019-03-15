@@ -1,8 +1,45 @@
 {{define "searchbox"}}
-<form action="/search" method="get">
-    <label for="GET-name">Query:</label>
-    <input id="GET-name" type="text" name="query"
-	   {{if .}} value="{{.}}" {{end}}>
+<div class="sb-container">
+    <form action="/search" method="get">
+	<label for="searchbox">Query:</label>
+	<input id="searchbox" type="text" name="query"
+	       {{if .}} value="{{.}}" {{end}}>
     <input type="submit" value="Search">
-</form>
+    </form>
+    <script>
+     var el = document.getElementById('searchbox');
+     SegmentedSearchbox.initSearchbox(el, 'api/searchboxconfig');
+    </script>
+    {{template "syntax"}}
+</div>
+{{end}}
+
+
+{{define "syntax"}}
+<div class="syntax">
+    <p>
+	<h3>Available syntax:</h3>
+	<ul>
+	    <li>song: Find shows that contain song.</li>
+	    <li>song1 AND song1: Find shows that contain both song1 and song2.</li>
+	    <li>song1 OR song2: Find shows that contain either song1 or song2. (May contain both)</li>
+	    <li>NOT song1: Find shows that don't contain song1.</li>
+	    <li>(): Allows precedence in the query.</li>
+	</ul>
+    </p>
+</div>
+{{end}}
+
+{{define "searchbox-head"}}
+<script src="static/segmentedsearchbox.js"></script>
+<link rel="stylesheet" type="text/css" href="static/segmentedsearchbox.css">
+
+<style>
+ .sb-container {
+     width: 520px;
+     margin: 0 auto;
+     text-align: left;
+     padding: 40px 0;
+ }
+</style>
 {{end}}

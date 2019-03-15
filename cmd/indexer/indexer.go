@@ -144,38 +144,38 @@ func queryAllShows() (map[string]showData, error) {
 	return shows, nil
 }
 
-func getSetlist(showId, date string) (*searcher.Setlist, error) {
+func getSetlistAndSongs(showId, date string) (*searcher.Setlist, map[string]string, error) {
 	url := fmt.Sprintf("%s?apikey=%s&showid=%s", getSetlistUrl, apiKey, showId)
 	res, err := sendPhishNetQuery(url)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	var respJson map[string]interface{}
 	if err := json.Unmarshal(body, &respJson); err != nil {
-		return nil, errors.WithStack(err)
+		return nil, nil, errors.WithStack(err)
 	}
 
 	errorCode, ok := respJson["error_code"].(float64)
 	if !ok {
-		return nil, errors.New("Unable to find error code")
+		return nil, nil, errors.New("Unable to find error code")
 	}
 	if errorCode != 0 {
-		return nil, fmt.Errorf("Request error: %d; %s", int(errorCode), respJson["error_message"].(string))
+		return nil, nil, fmt.Errorf("Request error: %d; %s", int(errorCode), respJson["error_message"].(string))
 	}
 
 	response := respJson["response"].(map[string]interface{})
 	count := int(response["count"].(float64))
 	if count == 0 {
 		// If we got 0 setlists, it means that there isn't a setlist for the given show.
-		return nil, nil
+		return nil, nil, nil
 	}
 	if count > 1 {
-		return nil, fmt.Errorf("received multiple entries for showid=%s. Using the first one.", showId)
+		return nil, nil, fmt.Errorf("received multiple entries for showid=%s. Using the first one.", showId)
 	}
 	setlistData := response["data"].([]interface{})[0].(map[string]interface{})["setlistdata"].(string)
 	return searcher.ParseSetlistFromPhishNet(showId, date, setlistData)
@@ -205,7 +205,7 @@ func main() {
 		log.Fatalf("error querying all shows: %v\n", err)
 	}
 	for _, show := range shows {
-		sl, err := getSetlist(show.id, show.date)
+		sl, songSet, err := getSetlistAndSongs(show.id, show.date)
 		if err != nil {
 			log.Fatalf("unable to fetch setlist for show %s - %s; %v", show.id, show.date, err)
 		}
@@ -214,6 +214,9 @@ func main() {
 			continue
 		}
 		w.AddSetlist(sl)
+		for longName, shortName := range songSet {
+			w.AddSong(longName, shortName)
+		}
 	}
 	if err := w.Write(); err != nil {
 		log.Fatalf("error writing file: %v\n", err)

@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: setlist-search
-        image: gcr.io/setlist-searcher/setlist-search
+        image: gcr.io/setlist-searcher/setlist-search:latest
         ports:
         - containerPort: 8080
 ---

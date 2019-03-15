@@ -59,6 +59,11 @@ func main() {
 	e.GET("/api/search", handlers.SearchAPI)
 	e.POST("/api/search", handlers.SearchAPI)
 
+	// Accept /api/search on GET.
+	e.GET("/api/searchboxconfig", handlers.SearchBoxConfigAPI)
+
 	e.GET("/debug/requests", echotrace.Handler)
+
+	e.Static("/static", "assets")
 	e.Logger.Fatal(e.Start(*httpAddr))
 }

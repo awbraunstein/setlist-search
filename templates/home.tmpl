@@ -2,7 +2,7 @@
 <div class="sample-queries">
     <h2>Sample Queries</h2>
     {{range .}}
-	<div class="query"><a href="/search?query={{.}}">{{.}}</a></div>
+	<div class="query"><a href="/search?query={{.Query}}">{{.HumanValue}}</a></div>
     {{end}}
 </div>
 {{end}}
@@ -11,6 +11,15 @@
 <html>
     <head>
 	<title>Setlist Searcher</title>
+	{{template "searchbox-head"}}
+	<style>
+	 .sample-queries {
+	     width: 520px;
+	     margin: 0 auto;
+	     text-align: left;
+	     padding: 40px 0;
+	 }
+	</style>
     </head>
     <body>
 	<div>

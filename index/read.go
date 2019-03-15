@@ -3,9 +3,8 @@ package index
 import (
 	"bufio"
 	"fmt"
-	"io"
 	"os"
-	"sort"
+	"strings"
 
 	"github.com/awbraunstein/setlist-search/searcher"
 	"github.com/pkg/errors"
@@ -14,9 +13,14 @@ import (
 // The index format is as follows:
 //
 //  "setsearcher index 1"
-//  setlists
+//  [SONGS]
+//  [SETLISTS]
 //
-// Each section will be separated by a newline ("\n).
+// Each section will be separated by a newline ("\n") and start with the
+// section's name and end with the closing marker [END]
+//
+// Songs will be a map from human name to short name. This will account for when
+// there are multiple versions of the songs human name. The separator is "|".
 //
 // Setlists will be a list of setlists where each setlist is formatted according
 // to the setlist serialization method separated by newlines.
@@ -29,7 +33,7 @@ const (
 // on setlists.
 type Index struct {
 	// songs is the list of songs that are in the index.
-	songs []string
+	songs map[string]string
 	// setlists is a map from showid to setlist
 	setlists map[string]*searcher.Setlist
 	// map from song to the list of showids that that song was played in.
@@ -44,12 +48,16 @@ func Open(filename string) (*Index, error) {
 	}
 	defer file.Close()
 	i := &Index{
+		songs:        make(map[string]string),
 		setlists:     make(map[string]*searcher.Setlist),
 		reverseIndex: make(map[string][]string),
 	}
 
 	scanner := bufio.NewScanner(file)
 	if err := readHeader(scanner); err != nil {
+		return nil, err
+	}
+	if err := i.readSongs(scanner); err != nil {
 		return nil, err
 	}
 	if err := i.readSetlists(scanner); err != nil {
@@ -68,9 +76,37 @@ func readHeader(scanner *bufio.Scanner) error {
 	return nil
 }
 
-func (i *Index) readSetlists(scanner *bufio.Scanner) error {
-	songSet := make(map[string]bool)
+func (i *Index) readSongs(scanner *bufio.Scanner) error {
 	for scanner.Scan() {
+		// We are in the songs stanza.
+		if scanner.Text() == "[SONGS]" {
+			continue
+		}
+		// We are now done with this section.
+		if scanner.Text() == "[END]" {
+			return nil
+		}
+		// Expect a longText,data-value format.
+		parts := strings.Split(scanner.Text(), "|")
+
+		if len(parts) != 2 {
+			return fmt.Errorf("Song malformatted: %#v", scanner.Text())
+		}
+		i.songs[parts[0]] = parts[1]
+	}
+	return errors.New("Expected a closing statement for the songs section")
+}
+
+func (i *Index) readSetlists(scanner *bufio.Scanner) error {
+	for scanner.Scan() {
+		// We are in the setlist stanza.
+		if scanner.Text() == "[SETLISTS]" {
+			continue
+		}
+		// We are now done with this section.
+		if scanner.Text() == "[END]" {
+			return nil
+		}
 		setlist := scanner.Text()
 		sl, err := searcher.ParseSetlist(setlist)
 		if err != nil {
@@ -79,17 +115,9 @@ func (i *Index) readSetlists(scanner *bufio.Scanner) error {
 		i.setlists[sl.ShowId] = sl
 		for _, song := range sl.Songs() {
 			i.reverseIndex[song] = append(i.reverseIndex[song], sl.ShowId)
-			songSet[song] = true
 		}
 	}
-	for song := range songSet {
-		i.songs = append(i.songs, song)
-	}
-	sort.Strings(i.songs)
-	if err := scanner.Err(); err != io.EOF {
-		return err
-	}
-	return nil
+	return errors.New("Expected a closing statement for the setlists section")
 }
 
 // dropCR drops a terminal \r from the data.

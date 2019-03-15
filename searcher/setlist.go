@@ -61,15 +61,20 @@ func ParseSetlist(setlist string) (*Setlist, error) {
 	return sl, nil
 }
 
-func ParseSetlistFromPhishNet(showId, date, setlist string) (*Setlist, error) {
+// Returns a setlist and the songset or an error if there were any.
+func ParseSetlistFromPhishNet(showId, date, setlist string) (*Setlist, map[string]string, error) {
 	sl := &Setlist{
 		ShowId: showId,
 		Date:   date,
 	}
 	root, err := html.Parse(strings.NewReader(setlist))
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
+
+	songSet := make(map[string]string)
+
+	var getSongsErr error
 
 	getSongs := func(n *html.Node, set *Set) {
 		for current := n; current != nil; current = current.NextSibling {
@@ -84,13 +89,28 @@ func ParseSetlistFromPhishNet(showId, date, setlist string) (*Setlist, error) {
 			}
 			if isSong {
 				var name string
+				var humanName string
 				for _, attr := range current.Attr {
 					if attr.Key == "href" {
 						name = strings.TrimPrefix(attr.Val, "http://phish.net/song/")
+						// if this is a song href, then
+						// there should be a single
+						// child text node.
+						child := current.FirstChild
+						if child == nil || child.Type != html.TextNode {
+							getSongsErr = fmt.Errorf("expected node %v to have a child text node", current)
+							return
+						}
+						humanName = strings.TrimSpace(child.Data)
 						break
 					}
 				}
+				if name == "" || humanName == "" {
+					getSongsErr = fmt.Errorf("Expected node %v to be a song node", current)
+					return
+				}
 				set.Songs = append(set.Songs, name)
+				songSet[humanName] = name
 			}
 
 		}
@@ -128,7 +148,11 @@ func ParseSetlistFromPhishNet(showId, date, setlist string) (*Setlist, error) {
 	}
 	findSets(root)
 
-	return sl, nil
+	if getSongsErr != nil {
+		return nil, nil, getSongsErr
+	}
+
+	return sl, songSet, nil
 }
 
 func (s *Setlist) Songs() []string {

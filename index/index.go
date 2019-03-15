@@ -7,6 +7,10 @@ import (
 	"github.com/awbraunstein/setlist-search/index/query"
 )
 
+func (i *Index) Songs() map[string]string {
+	return i.songs
+}
+
 func (i *Index) ShowDate(id string) string {
 	sl := i.setlists[id]
 	if sl != nil {

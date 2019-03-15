@@ -6,14 +6,19 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type homeTemplateData struct {
-	SampleQueries []string
+type sampleQuery struct {
+	Query      string
+	HumanValue string
 }
 
-var homeData = &homeTemplateData{SampleQueries: []string{
-	"farmhouse",
-	"punch-you-in-the-eye AND fee AND the-sloth",
-	"i-am-hydrogen AND (NOT mikes-song AND NOT weekapaug-groove)",
+type homeTemplateData struct {
+	SampleQueries []sampleQuery
+}
+
+var homeData = &homeTemplateData{SampleQueries: []sampleQuery{
+	{"farmhouse", "Farmhouse"},
+	{"punch-you-in-the-eye AND fee AND the-sloth", "Punch You in the Eye AND The Sloth"},
+	{"i-am-hydrogen AND (NOT mikes-song AND NOT weekapaug-groove)", "I am Hydrogen AND (NOT Mike's Song AND NOT Weekapaug Groove)"},
 }}
 
 func Home(c echo.Context) error {

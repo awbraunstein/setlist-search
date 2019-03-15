@@ -89,12 +89,17 @@ func TestParseSetlistFromPhishNet(t *testing.T) {
 		Encore: &Set{Songs: []string{"good-times-bad-times"}},
 	}
 
-	got, err := ParseSetlistFromPhishNet("1", "2000-04-20", setlistData)
+	wantSongSet := map[string]string{"Cars Trucks Buses": "cars-trucks-buses", "Crossroads": "crossroads", "David Bowie": "david-bowie", "Dirt": "dirt", "Down with Disease": "down-with-disease", "Fluffhead": "fluffhead", "Golgi Apparatus": "golgi-apparatus", "Good Times Bad Times": "good-times-bad-times", "NICU": "nicu", "Possum": "possum", "Run Like an Antelope": "run-like-an-antelope", "Theme From the Bottom": "theme-from-the-bottom", "Train Song": "train-song", "Tube": "tube", "You Enjoy Myself": "you-enjoy-myself"}
+
+	got, gotss, err := ParseSetlistFromPhishNet("1", "2000-04-20", setlistData)
 	if err != nil {
 		t.Fatalf("Unable to parse setlist; %v", err)
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("got: %v\nexpected: %v", got, want)
+	}
+	if !reflect.DeepEqual(gotss, wantSongSet) {
+		t.Errorf("got: %#v\nexpected: %v", gotss, wantSongSet)
 	}
 
 }
