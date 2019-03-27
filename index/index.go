@@ -19,6 +19,14 @@ func (i *Index) ShowDate(id string) string {
 	return ""
 }
 
+func (i *Index) ShowUrl(id string) string {
+	sl := i.setlists[id]
+	if sl != nil {
+		return sl.Url
+	}
+	return ""
+}
+
 func (i *Index) Query(q string) ([]string, error) {
 	p := query.NewParser(strings.NewReader(q))
 	stmt, err := p.Parse()

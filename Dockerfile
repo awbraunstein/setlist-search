@@ -17,6 +17,7 @@ LABEL maintainer="Andrew Braunstein <awbraunstein@gmail.com>"
 WORKDIR /root/
 COPY --from=builder /go/src/github.com/awbraunstein/setlist-search/app .
 COPY --from=builder /go/src/github.com/awbraunstein/setlist-search/templates templates/
+COPY --from=builder /go/src/github.com/awbraunstein/setlist-search/assets assets/
 COPY --from=builder /go/src/github.com/awbraunstein/setlist-search/.setsearcherindex .
 ENV SETSEARCHERINDEX=/root/.setsearcherindex
 

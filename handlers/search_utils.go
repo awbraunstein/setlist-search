@@ -12,11 +12,28 @@ import (
 	"golang.org/x/net/trace"
 )
 
+type ShowInfo struct {
+	Date string `json:"date"`
+	Url  string `json:"url"`
+}
+
+type byDate []ShowInfo
+
+func (si byDate) Len() int {
+	return len(si)
+}
+func (si byDate) Swap(i, j int) {
+	si[i], si[j] = si[j], si[i]
+}
+func (si byDate) Less(i, j int) bool {
+	return si[i].Date < si[j].Date
+}
+
 // SearchResults is the json payload for a search query.
 type SearchResults struct {
 	// Exported to the api.
-	Count int      `json:"count"`
-	Dates []string `json:"dates"`
+	Count int        `json:"count"`
+	Shows []ShowInfo `json:"shows"`
 
 	// Internal only.
 	QueryTime time.Duration `json:"-"`
@@ -39,8 +56,11 @@ func searchIndex(c echo.Context, query string) (*SearchResults, error) {
 	}
 	sr.Count = len(shows)
 	for _, show := range shows {
-		sr.Dates = append(sr.Dates, idx.ShowDate(show))
+		sr.Shows = append(sr.Shows, ShowInfo{
+			Date: idx.ShowDate(show),
+			Url:  idx.ShowUrl(show),
+		})
 	}
-	sort.Strings(sr.Dates)
+	sort.Sort(byDate(sr.Shows))
 	return sr, nil
 }

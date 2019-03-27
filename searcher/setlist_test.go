@@ -66,7 +66,7 @@ func TestParseSetlist(t *testing.T) {
 }
 
 func TestSetlistString(t *testing.T) {
-	setlistString := "ID{1}DATE{2000-04-21}SET1{a,b,c,d}SET2{x,y,z}ENCORE{aa,bb}"
+	setlistString := "ID{1}DATE{2000-04-21}URL{http://google.com}SET1{a,b,c,d}SET2{x,y,z}ENCORE{aa,bb}"
 	setlistStruct, err := ParseSetlist(setlistString)
 	if err != nil {
 		t.Fatalf("Unable to parse setlist; %v", err)
@@ -82,6 +82,7 @@ func TestParseSetlistFromPhishNet(t *testing.T) {
 	want := &Setlist{
 		ShowId: "1",
 		Date:   "2000-04-20",
+		Url:    "http://phish.net/setlists/phish-december-29-1997-madison-square-garden-new-york-ny-usa.html",
 		Sets: []*Set{
 			&Set{Songs: []string{"nicu", "golgi-apparatus", "crossroads", "cars-trucks-buses", "train-song", "theme-from-the-bottom", "fluffhead", "dirt", "run-like-an-antelope"}},
 			&Set{Songs: []string{"down-with-disease", "david-bowie", "possum", "tube", "you-enjoy-myself"}},
@@ -91,7 +92,7 @@ func TestParseSetlistFromPhishNet(t *testing.T) {
 
 	wantSongSet := map[string]string{"Cars Trucks Buses": "cars-trucks-buses", "Crossroads": "crossroads", "David Bowie": "david-bowie", "Dirt": "dirt", "Down with Disease": "down-with-disease", "Fluffhead": "fluffhead", "Golgi Apparatus": "golgi-apparatus", "Good Times Bad Times": "good-times-bad-times", "NICU": "nicu", "Possum": "possum", "Run Like an Antelope": "run-like-an-antelope", "Theme From the Bottom": "theme-from-the-bottom", "Train Song": "train-song", "Tube": "tube", "You Enjoy Myself": "you-enjoy-myself"}
 
-	got, gotss, err := ParseSetlistFromPhishNet("1", "2000-04-20", setlistData)
+	got, gotss, err := ParseSetlistFromPhishNet("1", "2000-04-20", "http://phish.net/setlists/phish-december-29-1997-madison-square-garden-new-york-ny-usa.html", setlistData)
 	if err != nil {
 		t.Fatalf("Unable to parse setlist; %v", err)
 	}

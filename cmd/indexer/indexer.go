@@ -177,8 +177,9 @@ func getSetlistAndSongs(showId, date string) (*searcher.Setlist, map[string]stri
 	if count > 1 {
 		return nil, nil, fmt.Errorf("received multiple entries for showid=%s. Using the first one.", showId)
 	}
-	setlistData := response["data"].([]interface{})[0].(map[string]interface{})["setlistdata"].(string)
-	return searcher.ParseSetlistFromPhishNet(showId, date, setlistData)
+	data := response["data"].([]interface{})[0].(map[string]interface{})
+	setlistData := data["setlistdata"].(string)
+	return searcher.ParseSetlistFromPhishNet(showId, date, data["url"].(string), setlistData)
 }
 
 func getIndexLocation() string {

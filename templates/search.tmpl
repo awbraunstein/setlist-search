@@ -10,9 +10,9 @@
 	Found {{.Count}} results ({{.QueryTime}})
     </div>
     <div class="results-body">
-	{{range .Dates}}
+	{{range .Shows}}
 	    <div class="show">
-		{{.}}
+		<a href={{.Url}}>{{.Date}}</a>
 	    </div>
 	{{end}}
     </div>
@@ -23,7 +23,8 @@
 <html>
     <head>
 	<title>Search Results</title>
-	{{template "searchbox-head"}}
+	{{template "searchbox_head"}}
+	{{template "google_analytics"}}
     </head>
     <body>
 	<div>
