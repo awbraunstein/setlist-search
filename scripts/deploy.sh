@@ -6,18 +6,15 @@
 # exit when any command fails
 set -e
 
-# keep track of the last executed command
-trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
-# echo an error message before exiting
-trap 'echo "\"${last_command}\" command filed with exit code $?."' EXIT
-
 IMAGE=gcr.io/setlist-searcher/setlist-search
 
 # Set the tag to the last git revision. So we need to commit changes before
 # pushing.
 TAG=`git rev-parse HEAD | cut -c 1-10`
 
+echo "Building the container image...\n"
 docker build -t setlist-search .
+echo "Tagging the image with version ${TAG}"
 docker tag setlist-search ${IMAGE}:${TAG}
 docker push ${IMAGE}:${TAG}
 kubectl set image deployment/setlist-search-deployment setlist-search=${IMAGE}:${TAG}
