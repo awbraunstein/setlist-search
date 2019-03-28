@@ -42,7 +42,7 @@ type SearchResults struct {
 func searchIndex(c echo.Context, query string) (*SearchResults, error) {
 	idx := c.Get(internal.InjectorContextKey).(*index.Index)
 	start := time.Now()
-	shows, err := idx.Query(query)
+	shows, err := idx.Query(c.Request().Context(), query)
 	if err != nil {
 		tr := c.Get(echotrace.ContextKey).(trace.Trace)
 		tr.LazyPrintf("Error executing query: %v", err)

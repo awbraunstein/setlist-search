@@ -19,22 +19,22 @@
 </div>
 {{end}}
 
-<!doctype html>
-<html>
-    <head>
-	<title>Search Results</title>
-	{{template "searchbox_head"}}
-	{{template "google_analytics"}}
-    </head>
-    <body>
-	<div>
-	    <h1>Search Phish Setlists:</h1>
-	    {{template "searchbox" .Query}}
-	</div>
-	{{if .Results}}
-	    {{template "results" .Results}}
-	{{else}}
-	    {{template "error" .}}
-	{{end}}
-    </body>
-</html>
+{{define "content"}}
+<div>
+    <h1>Search Phish Setlists:</h1>
+    {{template "searchbox" .Query}}
+</div>
+{{if .Results}}
+    {{template "results" .Results}}
+{{else}}
+    {{template "error" .}}
+{{end}}
+{{end}}
+
+{{define "js"}}
+{{template "searchbox_head"}}
+{{end}}
+
+{{define "title"}}
+Search Results
+{{end}}

@@ -1,0 +1,30 @@
+{{define "base"}}
+<!doctype html>
+<html>
+    <head>
+	<title>{{block "title" .}}SearchPhish{{end}}</title>
+	{{block "js" .}} {{end}}
+	{{block "css" .}} {{end}}
+	<style>
+	 html, body {
+	     height: 100%;
+	 }
+	 body {
+	     display: flex;
+	     flex-direction: column;
+	 }
+	 .content {
+	     flex: 1 0 auto;
+	 }
+	</style>
+	{{template "google_analytics"}}
+	{{template "footer_head"}}
+    </head>
+    <body>
+	<div class="content">
+	    {{block "content" .}} {{end}}
+	</div>
+	{{template "footer"}}
+    </body>
+</html>
+{{end}}

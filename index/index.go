@@ -1,10 +1,13 @@
 package index
 
 import (
+	"context"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/awbraunstein/setlist-search/index/query"
+	"github.com/pkg/errors"
 )
 
 func (i *Index) Songs() map[string]string {
@@ -27,18 +30,23 @@ func (i *Index) ShowUrl(id string) string {
 	return ""
 }
 
-func (i *Index) Query(q string) ([]string, error) {
+func (i *Index) Query(ctx context.Context, q string) ([]string, error) {
 	p := query.NewParser(strings.NewReader(q))
 	stmt, err := p.Parse()
 	if err != nil {
 		return nil, err
 	}
-	return i.evaluate(stmt), nil
+	return i.evaluate(ctx, stmt)
 }
 
-func (i *Index) evaluate(stmt query.Statement) []string {
+func (i *Index) evaluate(ctx context.Context, stmt query.Statement) ([]string, error) {
 	var eval func(query.Statement) map[string]bool
+	var err error
 	eval = func(stmt query.Statement) map[string]bool {
+		if deadline, ok := ctx.Deadline(); ok && deadline.After(time.Now()) {
+			err = errors.New("Deadline exceeded for query")
+			return nil
+		}
 		switch n := stmt.(type) {
 		case *query.AndStatement:
 			leftShows := eval(n.Left)
@@ -81,12 +89,16 @@ func (i *Index) evaluate(stmt query.Statement) []string {
 
 	shows := eval(stmt)
 
+	if err != nil {
+		return nil, err
+	}
+
 	var showList []string
 	for show := range shows {
 		showList = append(showList, show)
 	}
 
 	sort.Strings(showList)
-	return showList
+	return showList, nil
 
 }

@@ -1,6 +1,7 @@
 package index
 
 import (
+	"context"
 	"io/ioutil"
 	"os"
 	"reflect"
@@ -63,7 +64,7 @@ ID{1250458932}DATE{1994-04-06}SET1{llama,guelah-papyrus,poor-heart,stash,the-liz
 	for _, tc := range tests {
 		tc := tc
 		t.Run("Query: "+tc.query, func(t *testing.T) {
-			got, err := i.Query(tc.query)
+			got, err := i.Query(context.Background(), tc.query)
 			if err != nil {
 				t.Fatalf("Got unexpected error: %v", err)
 			}

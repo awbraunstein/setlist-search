@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"flag"
 	"fmt"
 	"log"
@@ -50,7 +51,7 @@ func main() {
 	for scanner.Scan() {
 		line := scanner.Text()
 		start := time.Now()
-		shows, err := i.Query(line)
+		shows, err := i.Query(context.Background(), line)
 		fmt.Printf("Query took %v\n", time.Since(start))
 		if err != nil {
 			fmt.Printf("Error processing query: %v\n", err)

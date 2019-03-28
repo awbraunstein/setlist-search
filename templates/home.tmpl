@@ -7,28 +7,27 @@
 </div>
 {{end}}
 
-<!doctype html>
-<html>
-    <head>
-	<title>Setlist Searcher</title>
-	{{template "searchbox_head"}}
-	<style>
-	 .sample-queries {
-	     width: 520px;
-	     margin: 0 auto;
-	     text-align: left;
-	     padding: 40px 0;
-	 }
-	</style>
-	{{template "google_analytics"}}
-    </head>
-    <body>
-	<div>
-	    <h1>Search Phish Setlists:</h1>
-	</div>
-	<div>
-	    {{template "searchbox"}}
-	    {{template "sample_queries" .SampleQueries}}
-	</div>
-    </body>
-</html>
+{{define "js"}}
+{{template "searchbox_head"}}
+{{end}}
+
+{{define "css"}}
+<style>
+ .sample-queries {
+     width: 520px;
+     margin: 0 auto;
+     text-align: left;
+     padding: 40px 0;
+ }
+</style>
+{{end}}
+
+{{define "content"}}
+<div>
+    <h1>Search Phish Setlists:</h1>
+</div>
+<div>
+    {{template "searchbox"}}
+    {{template "sample_queries" .SampleQueries}}
+</div>
+{{end}}

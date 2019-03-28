@@ -26,21 +26,35 @@ func getIndexLocation() string {
 }
 
 type Template struct {
-	templates *template.Template
+	templates map[string]*template.Template
 }
 
 func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
-	return t.templates.ExecuteTemplate(w, name, data)
+	return t.templates[name].ExecuteTemplate(w, "base", data)
+}
+
+func parseTemplates() *Template {
+	libs, err := filepath.Glob("templates/library/*.tmpl")
+	if err != nil {
+		panic(err.Error())
+	}
+	tmpls, err := filepath.Glob("templates/*.tmpl")
+	if err != nil {
+		panic(err.Error())
+	}
+	t := &Template{templates: make(map[string]*template.Template)}
+	for _, fname := range tmpls {
+		command := filepath.Base(fname)
+		t.templates[command] = template.Must(template.ParseFiles(append([]string{fname}, libs...)...))
+	}
+	return t
 }
 
 // This is the entrypoint into the setlist server.
 func main() {
 	flag.Parse()
 	e := echo.New()
-	t := &Template{
-		templates: template.Must(template.ParseGlob("templates/*.tmpl")),
-	}
-	e.Renderer = t
+	e.Renderer = parseTemplates()
 
 	e.Use(middleware.Recover())
 	e.Use(middleware.Logger())
