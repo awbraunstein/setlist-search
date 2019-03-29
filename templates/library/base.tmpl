@@ -30,20 +30,25 @@
 	     background-size: 100px 100px;
 	 }
 	 header {
-	     color: white;
+	     color: black;
 	     text-align: center;
 	 }
+	 a.sitename {
+	     background: rgba(255, 255, 255, .7) ;
+	     border-radius: 20px;
+	     padding: 10px;
+	 }
 	 header a:link {
-	     color: white;
+	     color: black;
 	 }
 	 header a:visited {
-	     color: white;
+	     color: black;
 	 }
 	 header a:hover {
-	     color: white;
+	     color: black;
 	 }
 	 header a:active {
-	     color: white;
+	     color: black;
 	 }
 	</style>
 	{{template "google_analytics"}}
@@ -52,7 +57,7 @@
     <body>
 	<header class="donutbackground">
 	    {{block "header" .}}
-	    <h1><a href="https://searchphish.com">SearchPhish.com</a></h1>
+	    <h1><a class="sitename" href="https://searchphish.com">SearchPhish.com</a></h1>
             {{end}}
 	</header>
 	<div class="content">

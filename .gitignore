@@ -12,3 +12,6 @@
 *.out
 
 .setsearcherindex
+setlist-search
+cmd/indexer/indexer
+cmd/searcher/searcher
