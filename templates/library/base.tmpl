@@ -16,11 +16,45 @@
 	 .content {
 	     flex: 1 0 auto;
 	 }
+	 .donutbackground {
+	     background:
+		 radial-gradient(circle at 100% 50%, rgb(52,58,116) 10%, rgba(0,0,0,0) 11%),
+		 radial-gradient(circle at 0% 50%, rgb(52,58,116) 10%, rgba(0,0,0,0) 11%),
+		 radial-gradient(circle at 100% 50%, rgb(52,58,116) 10%, rgba(0,0,0,0) 11%) 50px 50px,
+		 radial-gradient(circle at 0% 50%, rgb(52,58,116) 10%, rgba(0,0,0,0) 11%) 50px 50px,
+		 radial-gradient(circle at 100% 50%, rgb(223,92,91) 20%, rgba(0,0,0,0) 21%),
+		 radial-gradient(circle at 0% 50%, rgb(223,92,91) 20%, rgba(0,0,0,0) 21%),
+		 radial-gradient(circle at 100% 50%, rgb(223,92,91) 20%, rgba(0,0,0,0) 21%) 50px 50px,
+		 radial-gradient(circle at 0% 50%, rgb(223,92,91) 20%, rgba(0,0,0,0) 21%) 50px 50px;
+	     background-color: rgb(52,58,116);
+	     background-size: 100px 100px;
+	 }
+	 header {
+	     color: white;
+	     text-align: center;
+	 }
+	 header a:link {
+	     color: white;
+	 }
+	 header a:visited {
+	     color: white;
+	 }
+	 header a:hover {
+	     color: white;
+	 }
+	 header a:active {
+	     color: white;
+	 }
 	</style>
 	{{template "google_analytics"}}
 	{{template "footer_head"}}
     </head>
     <body>
+	<header class="donutbackground">
+	    {{block "header" .}}
+	    <h1><a href="https://searchphish.com">SearchPhish.com</a></h1>
+            {{end}}
+	</header>
 	<div class="content">
 	    {{block "content" .}} {{end}}
 	</div>

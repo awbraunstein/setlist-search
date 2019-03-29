@@ -18,18 +18,19 @@
      flex-shrink: 0;
      padding: 20px;
  }
- hr.footer {
-     border: 0;
-     height: 1px;
-     background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
+ span.footer {
+     background-color: white;
+     border-radius: 20px;
+     padding: 10px;
  }
 </style>
 {{end}}
 
 {{define "footer"}}
-<footer>
-    <hr class="footer">
-    Made with love by <a href="https://andrewbraunstein.com">Andrew
-	Braunstin</a>.
+<footer class="donutbackground">
+    <span class="footer">
+	Made with <span style="color: rgb(223,92,91)">&hearts;</span> by <a href="https://andrewbraunstein.com">Andrew
+	Braunstein</a>.
+    </span>
 </footer>
 {{end}}

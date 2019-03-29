@@ -1,7 +1,6 @@
 {{define "searchbox"}}
 <div class="sb-container">
     <form action="/search" method="get">
-	<label for="searchbox">Query:</label>
 	<input id="searchbox" type="text" name="query"
 	       {{if .}} value="{{.}}" {{end}}>
     <input type="submit" value="Search">
