@@ -28,7 +28,7 @@ Get the admin password.
 
 Setup traefik.
 
-`kubectl apply -f manifests/traefik.yaml --username=admin --password=mrYpEl4UevMG8iU7`
+`kubectl apply -f manifests/traefik.yaml --username=admin --password=<PASSWORD>`
 
 Setup the setlist search backend.
 

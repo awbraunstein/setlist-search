@@ -104,3 +104,30 @@ func TestParseSetlistFromPhishNet(t *testing.T) {
 	}
 
 }
+
+func TestNormalizeName(t *testing.T) {
+	tests := []struct {
+		name string
+		want string
+	}{
+		{
+			name: "A",
+			want: "a",
+		}, {
+			name: "",
+			want: "",
+		}, {
+			name: "A Test",
+			want: "a-test",
+		}, {
+			name: "A Sentence.",
+			want: "a-sentence",
+		},
+	}
+	for _, tc := range tests {
+		if got := normalizeName(tc.name); got != tc.want {
+			t.Errorf("normalizeName(%q)\nExpected: %s\nGot: %s", tc.name, tc.want, got)
+		}
+	}
+
+}

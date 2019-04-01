@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"unicode"
 
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
@@ -68,6 +69,23 @@ func ParseSetlist(setlist string) (*Setlist, error) {
 	return sl, nil
 }
 
+// normalizeName returns the normalized song name.
+// A Name Like This -> a-name-like-this
+func normalizeName(name string) string {
+	return strings.Map(func(r rune) rune {
+		if unicode.IsUpper(r) {
+			return unicode.ToLower(r)
+		}
+		switch r {
+		case '.', ',', ';', ':':
+			return -1
+		case ' ':
+			return '-'
+		}
+		return r
+	}, name)
+}
+
 // Returns a setlist and the songset or an error if there were any.
 func ParseSetlistFromPhishNet(showId, date, url, setlist string) (*Setlist, map[string]string, error) {
 	sl := &Setlist{
@@ -100,7 +118,6 @@ func ParseSetlistFromPhishNet(showId, date, url, setlist string) (*Setlist, map[
 				var humanName string
 				for _, attr := range current.Attr {
 					if attr.Key == "href" {
-						name = strings.TrimPrefix(attr.Val, "http://phish.net/song/")
 						// if this is a song href, then
 						// there should be a single
 						// child text node.
@@ -110,6 +127,7 @@ func ParseSetlistFromPhishNet(showId, date, url, setlist string) (*Setlist, map[
 							return
 						}
 						humanName = strings.TrimSpace(child.Data)
+						name = normalizeName(humanName)
 						break
 					}
 				}
