@@ -21,16 +21,16 @@ spec:
         image: gcr.io/setlist-searcher/setlist-search:latest
         ports:
         - containerPort: 8080
+        volumeMounts:
+        - name: google-cloud-key
+          mountPath: /var/secrets/google
+        env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /var/secrets/google/key.json
       volumes:
       - name: google-cloud-key
         secret:
           secretName: indexer-key
-      volumeMounts:
-      - name: google-cloud-key
-        mountPath: /var/secrets/google
-      env:
-      - name: GOOGLE_APPLICATION_CREDENTIALS
-        value: /var/secrets/google/key.json
 ---
 apiVersion: v1
 kind: Service
