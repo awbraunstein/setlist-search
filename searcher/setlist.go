@@ -77,7 +77,7 @@ func normalizeName(name string) string {
 			return unicode.ToLower(r)
 		}
 		switch r {
-		case '.', ',', ';', ':':
+		case '.', ',', ';', ':', '\'':
 			return -1
 		case ' ':
 			return '-'

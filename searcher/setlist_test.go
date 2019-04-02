@@ -122,6 +122,9 @@ func TestNormalizeName(t *testing.T) {
 		}, {
 			name: "A Sentence.",
 			want: "a-sentence",
+		}, {
+			name: "Mike's Song",
+			want: "mikes-song",
 		},
 	}
 	for _, tc := range tests {

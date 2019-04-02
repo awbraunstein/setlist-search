@@ -43,7 +43,7 @@ const (
 )
 
 var (
-	remote = flag.Bool("remote", false, "Whether the index will be stored remotely.")
+	remote = flag.Bool("remote", true, "Whether the index will be stored remotely.")
 )
 
 func usage() {
