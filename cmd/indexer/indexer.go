@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -12,6 +14,7 @@ import (
 	"strconv"
 	"time"
 
+	"cloud.google.com/go/storage"
 	"github.com/awbraunstein/setlist-search/index"
 	"github.com/awbraunstein/setlist-search/searcher"
 	"github.com/pkg/errors"
@@ -32,9 +35,15 @@ const (
 	firstShowDate = "1983-10-30"
 	queryShowsUrl = "https://api.phish.net/v3/shows/query"
 	getSetlistUrl = "https://api.phish.net/v3/setlists/get"
+	bucketName    = "setlist-searcher-index"
+	objectName    = "index.txt"
 
 	dateFormat = "2006-01-02"
 	queryRate  = time.Minute / 120
+)
+
+var (
+	remote = flag.Bool("remote", false, "Whether the index will be stored remotely.")
 )
 
 func usage() {
@@ -223,4 +232,27 @@ func main() {
 		log.Fatalf("error writing file: %v\n", err)
 	}
 	log.Printf("wrote index to %s", indexLocation)
+
+	// If this is remote, then we want to upload the result to Google Cloud Store.
+	if *remote {
+		f, err := os.Open(indexLocation)
+		if err != nil {
+			log.Fatalf("Unable to open index; %v\n", err)
+		}
+		defer f.Close()
+		client, err := storage.NewClient(context.Background())
+		if err != nil {
+			log.Fatalf("Failed to create client: %v\n", err)
+		}
+		defer client.Close()
+		object := client.Bucket(bucketName).Object(objectName)
+		wc := object.NewWriter(context.Background())
+		if _, err = io.Copy(wc, f); err != nil {
+			log.Fatalf("Unable to copy index; %v\n", err)
+		}
+		if err := wc.Close(); err != nil {
+			log.Fatalf("Unable to close index; %v\n", err)
+		}
+		log.Printf("wrote index to the cloud at %s/%s", bucketName, objectName)
+	}
 }

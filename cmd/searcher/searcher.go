@@ -41,9 +41,13 @@ func main() {
 	idxLoc := getIndexLocation()
 	fmt.Printf("Opening index: %s\n", idxLoc)
 	start := time.Now()
-	i, err := index.Open(idxLoc)
+	f, err := os.Open(idxLoc)
 	if err != nil {
 		log.Fatalf("Unable to open index; %v\n", err)
+	}
+	i, err := index.Read(f)
+	if err != nil {
+		log.Fatalf("Unable to read index; %v\n", err)
 	}
 	fmt.Printf("Took %v to open index\n", time.Since(start))
 	scanner := bufio.NewScanner(os.Stdin)

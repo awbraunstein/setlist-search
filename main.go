@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"io"
 	"os"
@@ -15,7 +16,8 @@ import (
 )
 
 var (
-	httpAddr = flag.String("http", ":8080", "Listen address")
+	httpAddr    = flag.String("http", ":8080", "Listen address")
+	remoteIndex = flag.Bool("remote_index", true, "Whether the index should be fetched from the remote source")
 )
 
 func getIndexLocation() string {
@@ -60,7 +62,13 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Gzip())
 	e.Use(echotrace.Middleware)
-	injector, err := internal.NewInjector(getIndexLocation())
+	var injector *internal.IndexInjector
+	var err error
+	if *remoteIndex {
+		injector, err = internal.NewCloudInjector(context.Background(), "setlist-searcher-index", "index.txt")
+	} else {
+		injector, err = internal.NewInjector(getIndexLocation())
+	}
 	if err != nil {
 		e.Logger.Fatal(err)
 	}

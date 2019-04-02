@@ -35,9 +35,15 @@ ID{1250458932}DATE{1994-04-06}SET1{llama,guelah-papyrus,poor-heart,stash,the-liz
 		t.Fatalf("unable to write tempfile; %v", err)
 	}
 
+	idxName := tmpFile.Name()
 	tmpFile.Close()
 
-	i, err := Open(tmpName)
+	f, err := os.Open(idxName)
+	if err != nil {
+		t.Fatalf("unable to open index; %v", err)
+	}
+
+	i, err := Read(f)
 	if err != nil {
 		t.Fatalf("unable to read index; %v", err)
 	}

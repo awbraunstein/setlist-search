@@ -36,10 +36,15 @@ ID{1250458932}DATE{1994-04-06}SET1{llama,guelah-papyrus,poor-heart,stash,the-liz
 
 	tmpFile.Close()
 
-	i, err := Open(tmpName)
+	f, err := os.Open(tmpName)
+	if err != nil {
+		t.Fatalf("unable to open index file")
+	}
+	i, err := Read(f)
 	if err != nil {
 		t.Fatalf("unable to read index; %v", err)
 	}
+	f.Close()
 
 	if len(i.setlists) != 8 {
 		t.Errorf("Wrong number of shows. Expected 8, but got %d", len(i.setlists))

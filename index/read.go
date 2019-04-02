@@ -3,7 +3,7 @@ package index
 import (
 	"bufio"
 	"fmt"
-	"os"
+	"io"
 	"strings"
 
 	"github.com/awbraunstein/setlist-search/searcher"
@@ -40,13 +40,8 @@ type Index struct {
 	reverseIndex map[string][]string
 }
 
-// Open reads an Index from disk.
-func Open(filename string) (*Index, error) {
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
+// Read reads an Index.
+func Read(file io.Reader) (*Index, error) {
 	i := &Index{
 		songs:        make(map[string]string),
 		setlists:     make(map[string]*searcher.Setlist),
