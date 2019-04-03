@@ -65,7 +65,7 @@ func main() {
 	var injector *internal.IndexInjector
 	var err error
 	if *remoteIndex {
-		injector, err = internal.NewCloudInjector(context.Background(), "setlist-searcher-index", "index.txt")
+		injector, err = internal.NewCloudInjector(context.Background(), "setlist-searcher-index", "index.txt", "setlist-searcher", "indexer")
 	} else {
 		injector, err = internal.NewInjector(getIndexLocation())
 	}
