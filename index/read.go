@@ -35,17 +35,17 @@ type Index struct {
 	// songs is the list of songs that are in the index.
 	songs map[string]string
 	// setlists is a map from showid to setlist
-	setlists map[string]*searcher.Setlist
+	setlists map[int]*searcher.Setlist
 	// map from song to the list of showids that that song was played in.
-	reverseIndex map[string][]string
+	reverseIndex map[string][]int
 }
 
 // Read reads an Index.
 func Read(file io.Reader) (*Index, error) {
 	i := &Index{
 		songs:        make(map[string]string),
-		setlists:     make(map[string]*searcher.Setlist),
-		reverseIndex: make(map[string][]string),
+		setlists:     make(map[int]*searcher.Setlist),
+		reverseIndex: make(map[string][]int),
 	}
 
 	scanner := bufio.NewScanner(file)

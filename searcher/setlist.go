@@ -3,16 +3,18 @@ package searcher
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"unicode"
 
+	"github.com/awbraunstein/gophish"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 )
 
 // Setlist holds the set from a show.
 type Setlist struct {
-	ShowId string
+	ShowId int
 	Date   string
 	Sets   []*Set
 	Encore *Set
@@ -25,7 +27,7 @@ type Set struct {
 }
 
 var (
-	idRe     = regexp.MustCompile(`^ID\{(.+?)\}`)
+	idRe     = regexp.MustCompile(`^ID\{(\d+?)\}`)
 	dateRe   = regexp.MustCompile(`DATE\{(.+?)\}`)
 	urlRe    = regexp.MustCompile(`URL\{(.+?)\}`)
 	setRe    = regexp.MustCompile(`(?:SET\d+\{(.*?)\})`)
@@ -39,6 +41,10 @@ func ParseSetlist(setlist string) (*Setlist, error) {
 	if len(idMatches) != 2 {
 		return nil, fmt.Errorf("ParseSetlist: couldn't find ID tag at start of setlist: %s", setlist)
 	}
+	id, err := strconv.Atoi(idMatches[1])
+	if err != nil {
+		return nil, fmt.Errorf("ParseSetlist: couldn't parse id into an int %s", idMatches[1])
+	}
 	dateMatches := dateRe.FindStringSubmatch(setlist)
 	if len(dateMatches) != 2 {
 		return nil, fmt.Errorf("ParseSetlist: couldn't find DATE tag in setlist: %s", setlist)
@@ -48,7 +54,7 @@ func ParseSetlist(setlist string) (*Setlist, error) {
 		return nil, fmt.Errorf("ParseSetlist: couldn't find URL tag in setlist: %s", setlist)
 	}
 	sl := &Setlist{
-		ShowId: idMatches[1],
+		ShowId: id,
 		Date:   dateMatches[1],
 		Url:    urlMatches[1],
 	}
@@ -87,13 +93,13 @@ func normalizeName(name string) string {
 }
 
 // Returns a setlist and the songset or an error if there were any.
-func ParseSetlistFromPhishNet(showId, date, url, setlist string) (*Setlist, map[string]string, error) {
+func ParseSetlistFromPhishNet(setlist *gophish.Setlist) (*Setlist, map[string]string, error) {
 	sl := &Setlist{
-		ShowId: showId,
-		Date:   date,
-		Url:    url,
+		ShowId: setlist.ShowId,
+		Date:   setlist.ShowDate,
+		Url:    setlist.Url,
 	}
-	root, err := html.Parse(strings.NewReader(setlist))
+	root, err := html.Parse(strings.NewReader(setlist.SetlistData))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -197,7 +203,7 @@ func (s *Setlist) Songs() []string {
 }
 
 func (s *Setlist) String() string {
-	str := fmt.Sprintf("ID{%s}DATE{%s}URL{%s}", s.ShowId, s.Date, s.Url)
+	str := fmt.Sprintf("ID{%d}DATE{%s}URL{%s}", s.ShowId, s.Date, s.Url)
 	for i, set := range s.Sets {
 		str += fmt.Sprintf("SET%d{%s}", i+1, strings.Join(set.Songs, ","))
 	}

@@ -14,7 +14,7 @@ type IndexWriter struct {
 	// indexLocation is the location that the index will be written to.
 	indexLocation string
 	// setlists is a map from showid to setlist info.
-	setlists map[string]*searcher.Setlist
+	setlists map[int]*searcher.Setlist
 	songs    map[string]string
 
 	// The tmp file we will be writing to.
@@ -24,7 +24,7 @@ type IndexWriter struct {
 func NewWriter(indexLocation string) *IndexWriter {
 	return &IndexWriter{
 		indexLocation: indexLocation,
-		setlists:      make(map[string]*searcher.Setlist),
+		setlists:      make(map[int]*searcher.Setlist),
 		songs:         make(map[string]string),
 	}
 }
@@ -69,12 +69,12 @@ func (w *IndexWriter) Write() error {
 	}
 	w.file.WriteString("[END]\n")
 
-	var showIds []string
+	var showIds []int
 	for key := range w.setlists {
 		showIds = append(showIds, key)
 	}
 
-	sort.Strings(showIds)
+	sort.Ints(showIds)
 	var setlists []string
 	for _, id := range showIds {
 		setlists = append(setlists, w.setlists[id].String())

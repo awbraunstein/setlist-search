@@ -5,6 +5,7 @@ go 1.12
 require (
 	cloud.google.com/go v0.37.2
 	github.com/awbraunstein/echo-trace v0.0.0-20190311053559-cda3030d0828
+	github.com/awbraunstein/gophish v0.0.0-20190404233629-71061dd7e2b4
 	github.com/labstack/echo/v4 v4.0.0
 	github.com/pkg/errors v0.8.1
 	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
